@@ -1,4 +1,5 @@
-const {RealTimeCollaborativeEntity} = require("../entities/RealTimeCollaborativeEntity")
+const {RealTimeCollaborativeEntity} = require("../entities/RealTimeCollaborativeEntity.js")
+const {checkMember} = require("../websocket/WsProviderList.js");
 
 //보드 text 가져오기
 exports.boardTextInfo = async(req,res,next) => {
@@ -7,6 +8,8 @@ exports.boardTextInfo = async(req,res,next) => {
     if (!existingDocument) {
       return res.status(404).send('Document not found');
     }
+    checkMember("user1",req.params.id);
+
     res.set('Content-Type', 'application/octet-stream');
     const update = existingDocument.text;
     console.log(existingDocument)
