@@ -1,14 +1,14 @@
 const {RealTimeCollaborativeEntity} = require('../entities/RealTimeCollaborativeEntity')
-const {wsProviderList,yDocList,Y} = require('./WsProviderList.js')
+const {wsProviderList,Y} = require('./WsProviderList.js')
 // const realTimeCollaborative = require('./db/schemas/realTimeCollaborative.js')
 module.exports = (server) => {
-  wsProviderList.forEach((wsProvider,index)=>{
+  wsProviderList.forEach((wsProvider,index,ydoc)=>{
     // 연결 상태 로그
   wsProvider.on('status', async(event) => {
     console.log(`Connection status: ${event.status}`);
     if(event.status==='connected'){
       wsProvider.ws.on('message', async(message) => {
-        const text = Y.encodeStateAsUpdate(yDocList[index]);
+        const text = Y.encodeStateAsUpdate(ydoc);
         const id = Number(wsProvider.url.split('/').pop());
         setInterval(()=>update(text,id),9000)
       });

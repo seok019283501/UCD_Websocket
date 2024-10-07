@@ -1,10 +1,13 @@
 const express = require('express');
 const path = require('path');
 const  cors = require('cors');
+const dotenv = require('dotenv');
 const websocket = require('./src/websocket/websocket.js');
 const db = require('./src/repository/MongoDB.js');
 const app = express();
 const RealTimeCollaborativeRouter = require('./src/routes/RealTimeCollaborativeRouter.js')
+
+dotenv.config();
 app.use(cors({ 
   origin: 'http://localhost:3000',
   methods: 'GET,POST,PUT,DELETE,OPTIONS',
