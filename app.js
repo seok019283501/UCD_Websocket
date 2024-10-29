@@ -5,7 +5,8 @@ const dotenv = require('dotenv');
 const websocket = require('./src/websocket/websocket.js');
 const db = require('./src/repository/MongoDB.js');
 const app = express();
-const RealTimeCollaborativeRouter = require('./src/routes/RealTimeCollaborativeRouter.js')
+const RealTimeCollaborativeRouter = require('./src/routes/RealTimeCollaborativeRouter.js');
+const SseRouter = require('./src/routes/SseRouter.js');
 
 dotenv.config();
 app.use(cors({ 
@@ -23,7 +24,11 @@ app.use(express.static(__dirname + '/img'));
 
 app.set('port',process.env.PORT || 8000);
 
+
 app.use('/realtime',RealTimeCollaborativeRouter);
+app.use('/sse',SseRouter);
+
+
 
 app.use((req,res,next)=>{
   const err = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
@@ -41,6 +46,9 @@ app.use((err,req,res,next)=>{
   res.locals.error = process.env.NOSD_ENV !== 'production' ? err:{};
   
 })
+
+
+
 const server = app.listen(app.get('port'),()=>{
   console.log(app.get('port'),'번 포트에서 대기중');
 })

@@ -9,6 +9,7 @@ module.exports = (server) => {
     if(event.status==='connected'){
       wsProvider.ws.on('message', async(message) => {
         const text = Y.encodeStateAsUpdate(ydoc);
+        console.log(text)
         const id = Number(wsProvider.url.split('/').pop());
         setInterval(()=>update(text,id),9000)
       });
