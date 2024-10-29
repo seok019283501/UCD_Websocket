@@ -10,7 +10,7 @@ exports.boardTextInfo = async (req, res, next) => {
     await addMember(req.decoded.sub, req.params.id);
 
     // 참여 알림 전송
-    notifyMemberJoin(req.decoded.sub, req.params.id);
+    // notifyMemberJoin(req.decoded.sub, req.params.id);
 
     res.set('Content-Type', 'application/octet-stream');
     const update = existingDocument.text;
@@ -28,7 +28,7 @@ exports.exitRoom = async (req, res, next) => {
     await exit(req.decoded.sub, req.params.id);
 
     // 종료 알림 전송
-    notifyMemberExit(req.decoded.sub, req.params.id);
+    // notifyMemberExit(req.decoded.sub, req.params.id);
 
     res.status(200).send("success");
   } catch (e) {
