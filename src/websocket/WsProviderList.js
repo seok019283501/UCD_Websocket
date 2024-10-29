@@ -9,7 +9,7 @@ let wsProviderList = [];
 //wSProvider 추가
 const addWsProvider = (roomNumber) =>{
   const ydoc = new Y.Doc();
-  const WebsocketProviderItem = new WebsocketProvider('ws://localhost:3001', roomNumber, ydoc,{WebSocketPolyfill: WebSocket});
+  const WebsocketProviderItem = new WebsocketProvider('ws://localhost:1234', roomNumber, ydoc,{WebSocketPolyfill: WebSocket});
   console.log(WebsocketProviderItem)
   wsProviderList.push({ roomNumber, provider: WebsocketProviderItem, ydoc });
 }
