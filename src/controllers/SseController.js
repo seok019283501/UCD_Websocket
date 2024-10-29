@@ -15,17 +15,17 @@ exports.userAttendEvent = async (req, res) => {
   
   const queueName = `member_notifications_${roomNumber}`;
   
-  // 협업 공간 알림 전송
-  const sendJoinMessage = (message) => {
-    res.write(`data: ${JSON.stringify(message)}\n\n`);
-  };
-
   // RabbitMQ 구독 설정
-  await channel.assertQueue(queueName);
-  channel.consume(queueName, (msg) => {
-    const newMember = JSON.parse(msg.content.toString());
-    sendJoinMessage(newMember);
-  }, { noAck: true });
+  try {
+    await channel.assertQueue(queueName);
+    await channel.consume(queueName, (msg) => {
+      const newMember = JSON.parse(msg.content.toString());
+      res.write(`data: ${JSON.stringify(newMember)}\n\n`);
+    }, { noAck: true });
+  } catch (error) {
+    console.error('RabbitMQ 구독 중 오류 발생:', error);
+    res.end();  // 오류 발생 시 연결 종료
+  }
 
   req.on('close', () => {
     console.log('SSE 연결이 종료되었습니다.');

@@ -20,8 +20,7 @@ const notifyMemberJoin = async (username, roomNumber) => {
   try {
     const message = { username, roomNumber, message: '새로운 회원이 참여했습니다!' };
     const queueName = `member_notifications_${roomNumber}`;
-    await channel.assertQueue(queueName);
-    channel.sendToQueue(queueName, Buffer.from(JSON.stringify(message)));
+    await channel.sendToQueue(queueName, Buffer.from(JSON.stringify(message)));
   } catch (e) {
     console.log(e);
   }
@@ -37,7 +36,6 @@ const notifyMemberExit = async (username, roomNumber) => {
   try {
     const message = { username, roomNumber, message: '회원이 나갔습니다.' };
     const queueName = `member_notifications_${roomNumber}`;
-    await channel.assertQueue(queueName);
     await channel.sendToQueue(queueName, Buffer.from(JSON.stringify(message)));
   } catch (e) {
     console.log(e);
