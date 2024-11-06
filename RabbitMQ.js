@@ -1,4 +1,5 @@
 const amqp = require('amqplib');
+const {CollaborationMemberEntity} = require('./src/entities/CollaborationMemberEntity');
 
 let channel;
 
@@ -21,7 +22,8 @@ const initRabbitMQ = async () => {
 // 특정 방에 대한 메시지 전송
 const notifyMemberJoin = async (username, roomNumber) => {
   try {
-    const message = { username, roomNumber, message: '새로운 회원이 참여했습니다!' };
+    const existingDocument = await CollaborationMemberEntity.find({ roomNumber: roomNumber });
+    const message = { existingDocument };
     channel.publish('member_notifications', roomNumber, Buffer.from(JSON.stringify(message)));
   } catch (e) {
     console.log(e);
@@ -31,7 +33,8 @@ const notifyMemberJoin = async (username, roomNumber) => {
 // 특정 방에 대한 퇴장 메시지 전송
 const notifyMemberExit = async (username, roomNumber) => {
   try {
-    const message = { username, roomNumber, message: '회원이 나갔습니다.' };
+    const existingDocument = await CollaborationMemberEntity.find({ roomNumber: roomNumber });
+    const message = { existingDocument };
     channel.publish('member_notifications', roomNumber, Buffer.from(JSON.stringify(message)));
   } catch (e) {
     console.log(e);

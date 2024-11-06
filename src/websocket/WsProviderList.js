@@ -3,6 +3,7 @@ const { WebsocketProvider } = require('y-websocket');
 const WebSocket = require('ws');
 const {notifyMemberJoin,notifyMemberExit} = require('../../RabbitMQ.js');
 const Y = require('yjs');
+const websocket = require('./websocket')
 
 let wsProviderList = [];
 
@@ -12,6 +13,7 @@ const addWsProvider = (roomNumber) =>{
   const WebsocketProviderItem = new WebsocketProvider('ws://localhost:1234', roomNumber, ydoc,{WebSocketPolyfill: WebSocket});
   console.log(WebsocketProviderItem)
   wsProviderList.push({ roomNumber, provider: WebsocketProviderItem, ydoc });
+  websocket();
 }
 
 
