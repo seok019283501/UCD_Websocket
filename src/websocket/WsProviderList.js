@@ -2,18 +2,58 @@ const {CollaborationMemberEntity} = require('../entities/CollaborationMemberEnti
 const { WebsocketProvider } = require('y-websocket');
 const WebSocket = require('ws');
 const {notifyMemberJoin,notifyMemberExit} = require('../../RabbitMQ.js');
+const { RealTimeCollaborativeEntity } = require('../entities/RealTimeCollaborativeEntity');
 const Y = require('yjs');
-const websocket = require('./websocket')
 
 let wsProviderList = [];
 
+const initWebsocket = async() => {
+  console.log(wsProviderList)
+  wsProviderList.forEach(({ roomNumber, provider, ydoc }) => {
+    console.log(roomNumber)
+    provider.on('status', async (event) => {
+      console.log(`Connection status: ${event.status}`);
+      if (event.status === 'connected') {
+        provider.ws.on('message', async (message) => {
+          const text = Y.encodeStateAsUpdate(ydoc);
+          console.log(`roonumber : ${roomNumber}`)
+          console.log(text);
+          setInterval(() => update(text, Number(roomNumber)), 9000);
+        });
+      }
+    });
+
+    provider.on('sync', (isSynced) => {
+      console.log(`Document is synced: ${isSynced}`);
+    });
+  });
+};
+
+// 문서 내용 저장 함수
+const update = async (text, id) => {
+  try {
+    if (isNaN(id)) {
+      return;
+    }
+    const existingDocument = await RealTimeCollaborativeEntity.findOne({ id: id });
+    const buffer = Buffer.from(text);
+    if (!existingDocument) {
+      await RealTimeCollaborativeEntity.create({ id, name: id, text: buffer });
+    } else {
+      await RealTimeCollaborativeEntity.updateOne({ id }, { text: buffer }, { new: true });
+    }
+  } catch (error) {
+    console.error('Error updating document:', error);
+  }
+};
+
 //wSProvider 추가
-const addWsProvider = (roomNumber) =>{
+const addWsProvider = async(roomNumber) =>{
   const ydoc = new Y.Doc();
-  const WebsocketProviderItem = new WebsocketProvider('ws://localhost:1234', roomNumber, ydoc,{WebSocketPolyfill: WebSocket});
-  console.log(WebsocketProviderItem)
-  wsProviderList.push({ roomNumber, provider: WebsocketProviderItem, ydoc });
-  websocket();
+  const number = Number(roomNumber);
+  const WebsocketProviderItem = await new WebsocketProvider('ws://localhost:1234', number, ydoc,{WebSocketPolyfill: WebSocket});
+  wsProviderList.push({ roomNumber: number, provider: WebsocketProviderItem, ydoc });
+  initWebsocket()
 }
 
 
@@ -50,7 +90,7 @@ const addMember = async (username, roomNumber) => {
 
 //종료
 const exit = async (username,roomNumber) => {
-  await CollaborationMemberEntity.deleteOne({ name: username });
+  await CollaborationMemberEntity.deleteOne({ username: username });
   const roomMemberList = checkMember(roomNumber);
   if (roomMemberList.length === 0){
     const index = wsProviderList.findIndex(item => item.roomNumber === roomNumber);
@@ -63,4 +103,4 @@ const exit = async (username,roomNumber) => {
   await notifyMemberExit(username, roomNumber);
 }
 
-module.exports = {wsProviderList, addWsProvider, checkMember, Y, addMember, exit};
+module.exports = {initWebsocket,addWsProvider, checkMember, Y, addMember, exit};

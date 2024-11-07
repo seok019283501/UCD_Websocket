@@ -2,11 +2,12 @@ const express = require('express');
 const path = require('path');
 const  cors = require('cors');
 const dotenv = require('dotenv');
-const websocket = require('./src/websocket/websocket.js');
 const db = require('./src/repository/MongoDB.js');
 const app = express();
 const RealTimeCollaborativeRouter = require('./src/routes/RealTimeCollaborativeRouter.js');
 const SseRouter = require('./src/routes/SseRouter.js');
+
+
 
 dotenv.config();
 app.use(cors({ 
@@ -53,5 +54,3 @@ const server = app.listen(app.get('port'),()=>{
   console.log(app.get('port'),'번 포트에서 대기중');
 })
 db();
-
-websocket(server);
