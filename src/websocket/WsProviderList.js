@@ -1,28 +1,45 @@
 const {CollaborationMemberEntity} = require('../entities/CollaborationMemberEntity.js');
 const { WebsocketProvider } = require('y-websocket');
 const WebSocket = require('ws');
-const {notifyMemberJoin,notifyMemberExit} = require('../../RabbitMQ.js');
+const {notifyMember} = require('../../RabbitMQ.js');
 const { RealTimeCollaborativeEntity } = require('../entities/RealTimeCollaborativeEntity');
 const Y = require('yjs');
 
 let wsProviderList = [];
 
 const initWebsocket = async() => {
-  console.log(wsProviderList)
   wsProviderList.forEach(({ roomNumber, provider, ydoc }) => {
-    console.log(roomNumber)
+    console.log(provider.roomname)
+    const awareness = provider.awareness;
     provider.on('status', async (event) => {
       console.log(`Connection status: ${event.status}`);
       if (event.status === 'connected') {
         provider.ws.on('message', async (message) => {
           const text = Y.encodeStateAsUpdate(ydoc);
-          console.log(`roonumber : ${roomNumber}`)
-          console.log(text);
           setInterval(() => update(text, Number(roomNumber)), 9000);
+
         });
       }
+    }
+  );
+    awareness.on('change', change => {
+      let users = Array.from(awareness.getStates().values())
+        .filter(user => Object.keys(user).length > 0) // 빈 객체 제거
+        .reduce((uniqueUsers, user) => {
+          const username = user.user.username;
+          if (!uniqueUsers.has(username)) {
+            uniqueUsers.set(username, user);
+          }
+          return uniqueUsers;
+        }, new Map());
+        if (users.length === 0) {
+          // 해당 wsProviderList 아이템 제거
+          wsProviderList.splice(index, 1);
+          console.log(`Room ${roomNumber}의 WebsocketProvider가 제거되었습니다.`);
+        }
+      users = Array.from(users.values()); // Map을 배열로 변환
+      notifyMember(users, provider.roomname);
     });
-
     provider.on('sync', (isSynced) => {
       console.log(`Document is synced: ${isSynced}`);
     });
@@ -49,6 +66,7 @@ const update = async (text, id) => {
 
 //wSProvider 추가
 const addWsProvider = async(roomNumber) =>{
+  
   try{
     const ydoc = new Y.Doc();
     const number = Number(roomNumber);
@@ -62,55 +80,17 @@ const addWsProvider = async(roomNumber) =>{
 }
 
 
-//유저 수 확인
-const checkMember = async(roomNumber) => {
-  let roomMemberList = '';
-  try{
-    roomMemberList = await CollaborationMemberEntity.find({roomNumber:roomNumber});
-  }catch(e){
-    console.log(e)
-  }
 
-  return roomMemberList;
-}
-
-
-
-// 회원 추가
+// 웹 소켓 접속 추가
 const addMember = async (username, roomNumber) => {
-  const roomMemberList = await checkMember(roomNumber);
-  if (roomMemberList.length === 0) {
-    addWsProvider(roomNumber);
-  }
   try{
-    let user = await CollaborationMemberEntity.findOne({ username: username, roomNumber: roomNumber });
-    console.log("Adsfasdf")
-    console.log(user)
-
-    if(!user){
-      await CollaborationMemberEntity.create({ username, roomNumber });
-      await notifyMemberJoin(username, roomNumber);
-
+    if(!wsProviderList.some(item => item.roomNumber === roomNumber)){
+      addWsProvider(roomNumber);
     }
-    // RabbitMQ에 새 회원 알림 메시지 전송
   }catch(e){
     console.log(e)
   }
 };
 
-//종료
-const exit = async (username,roomNumber) => {
-  await CollaborationMemberEntity.deleteOne({ username: username });
-  const roomMemberList = checkMember(roomNumber);
-  if (roomMemberList.length === 0){
-    const index = wsProviderList.findIndex(item => item.roomNumber === roomNumber);
-    if (index !== -1) {
-      // 해당 wsProviderList 아이템 제거
-      wsProviderList.splice(index, 1);
-      console.log(`Room ${roomNumber}의 WebsocketProvider가 제거되었습니다.`);
-    }
-  }
-  await notifyMemberExit(username, roomNumber);
-}
 
-module.exports = {initWebsocket,addWsProvider, checkMember, Y, addMember, exit};
+module.exports = {initWebsocket,addWsProvider, Y, addMember};

@@ -1,6 +1,6 @@
 const { RealTimeCollaborativeEntity } = require("../entities/RealTimeCollaborativeEntity.js");
 const { CollaborationMemberEntity } = require('../entities/CollaborationMemberEntity.js');
-const { addMember, exit, initWebsocket } = require("../websocket/WsProviderList.js");
+const { addMember, initWebsocket } = require("../websocket/WsProviderList.js");
 const { notifyMemberJoin, notifyMemberExit } = require('../../RabbitMQ.js');
 
 // 보드 text 가져오기
@@ -25,21 +25,6 @@ exports.boardTextInfo = async (req, res, next) => {
     }
 
     res.status(200).send(update);
-  } catch (e) {
-    console.log(e);
-    res.status(500).send('Document not found');
-  }
-};
-
-// 종료
-exports.exitRoom = async (req, res, next) => {
-  try {
-    await exit(req.decoded.sub, req.params.id);
-
-    // 종료 알림 전송
-    // notifyMemberExit(req.decoded.sub, req.params.id);
-
-    res.status(200).send("success");
   } catch (e) {
     console.log(e);
     res.status(500).send('Document not found');

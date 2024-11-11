@@ -20,25 +20,14 @@ const initRabbitMQ = async () => {
 };
 
 // 특정 방에 대한 메시지 전송
-const notifyMemberJoin = async (username, roomNumber) => {
+const notifyMember = async (users, roomNumber) => {
   try {
-    const existingDocument = await CollaborationMemberEntity.find({ roomNumber: roomNumber });
-    const message = { existingDocument };
-    channel.publish('member_notifications', roomNumber, Buffer.from(JSON.stringify(message)));
+    const message = { users };
+    channel.publish('member_notifications', roomNumber.toString(), Buffer.from(JSON.stringify(message)));
   } catch (e) {
     console.log(e);
   }
 };
 
-// 특정 방에 대한 퇴장 메시지 전송
-const notifyMemberExit = async (username, roomNumber) => {
-  try {
-    const existingDocument = await CollaborationMemberEntity.find({ roomNumber: roomNumber });
-    const message = { existingDocument };
-    channel.publish('member_notifications', roomNumber, Buffer.from(JSON.stringify(message)));
-  } catch (e) {
-    console.log(e);
-  }
-};
 
-module.exports = { initRabbitMQ, notifyMemberJoin, notifyMemberExit };
+module.exports = { initRabbitMQ, notifyMember };
