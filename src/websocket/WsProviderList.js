@@ -49,11 +49,16 @@ const update = async (text, id) => {
 
 //wSProvider 추가
 const addWsProvider = async(roomNumber) =>{
-  const ydoc = new Y.Doc();
-  const number = Number(roomNumber);
-  const WebsocketProviderItem = await new WebsocketProvider('ws://localhost:1234', number, ydoc,{WebSocketPolyfill: WebSocket});
-  wsProviderList.push({ roomNumber: number, provider: WebsocketProviderItem, ydoc });
-  initWebsocket()
+  try{
+    const ydoc = new Y.Doc();
+    const number = Number(roomNumber);
+    const WebsocketProviderItem = await new WebsocketProvider('ws://localhost:1234', number, ydoc,{WebSocketPolyfill: WebSocket});
+    wsProviderList.push({ roomNumber: number, provider: WebsocketProviderItem, ydoc });
+    initWebsocket()
+  }catch(e){
+    console.log(e)
+  }
+  
 }
 
 
@@ -62,7 +67,6 @@ const checkMember = async(roomNumber) => {
   let roomMemberList = '';
   try{
     roomMemberList = await CollaborationMemberEntity.find({roomNumber:roomNumber});
-
   }catch(e){
     console.log(e)
   }
@@ -79,10 +83,16 @@ const addMember = async (username, roomNumber) => {
     addWsProvider(roomNumber);
   }
   try{
-    const user = await CollaborationMemberEntity.findOne({ name: username, roomNumber: roomNumber });
-    await CollaborationMemberEntity.create({ username, roomNumber });
+    let user = await CollaborationMemberEntity.findOne({ username: username, roomNumber: roomNumber });
+    console.log("Adsfasdf")
+    console.log(user)
+
+    if(!user){
+      await CollaborationMemberEntity.create({ username, roomNumber });
+      await notifyMemberJoin(username, roomNumber);
+
+    }
     // RabbitMQ에 새 회원 알림 메시지 전송
-    await notifyMemberJoin(username, roomNumber);
   }catch(e){
     console.log(e)
   }
