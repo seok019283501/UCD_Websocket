@@ -6,7 +6,7 @@ let channel;
 // RabbitMQ 초기화
 const initRabbitMQ = async () => {
   try {
-    const connection = await amqp.connect('amqp://admin:admin123@localhost:5672');
+    const connection = await amqp.connect('amqp://guest:guest@localhost:5672');
     channel = await connection.createChannel();
 
     // Fanout 교환기 선언
