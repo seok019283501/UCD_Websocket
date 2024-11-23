@@ -1,4 +1,4 @@
-const { RealTimeCollaborativeEntity } = require("../entities/RealTimeCollaborativeEntity.js");
+const { RealTimeCollaborativeTextEntity } = require("../entities/RealTimeCollaborativeTextEntity.js");
 const { CollaborationMemberEntity } = require('../entities/CollaborationMemberEntity.js');
 const { addMember, initWebsocket } = require("../websocket/WsProviderList.js");
 const { notifyMemberJoin, notifyMemberExit } = require('../../RabbitMQ.js');
@@ -9,7 +9,7 @@ exports.boardTextInfo = async (req, res, next) => {
 
     await addMember(req.decoded.sub, req.params.id);
 
-    const existingDocument = await RealTimeCollaborativeEntity.findOne({ id: req.params.id });
+    const existingDocument = await RealTimeCollaborativeTextEntity.findOne({ id: req.params.id });
 
     await initWebsocket();
 

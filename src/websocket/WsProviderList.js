@@ -2,7 +2,7 @@ const {CollaborationMemberEntity} = require('../entities/CollaborationMemberEnti
 const { WebsocketProvider } = require('y-websocket');
 const WebSocket = require('ws');
 const {notifyMember} = require('../../RabbitMQ.js');
-const { RealTimeCollaborativeEntity } = require('../entities/RealTimeCollaborativeEntity');
+const { RealTimeCollaborativeTextEntity } = require('../entities/RealTimeCollaborativeTextEntity');
 const Y = require('yjs');
 
 let wsProviderList = [];
@@ -16,7 +16,8 @@ const initWebsocket = async() => {
       if (event.status === 'connected') {
         provider.ws.on('message', async (message) => {
           const text = Y.encodeStateAsUpdate(ydoc);
-          setInterval(() => update(text, Number(roomNumber)), 9000);
+          console.log(text)
+          setInterval(() => update(text, roomNumber), 30000);
 
         });
       }
@@ -49,15 +50,12 @@ const initWebsocket = async() => {
 // 문서 내용 저장 함수
 const update = async (text, id) => {
   try {
-    if (isNaN(id)) {
-      return;
-    }
-    const existingDocument = await RealTimeCollaborativeEntity.findOne({ id: id });
+    const existingDocument = await RealTimeCollaborativeTextEntity.findOne({ id: id });
     const buffer = Buffer.from(text);
     if (!existingDocument) {
-      await RealTimeCollaborativeEntity.create({ id, name: id, text: buffer });
+      await RealTimeCollaborativeTextEntity.create({ id, name: id, text: buffer });
     } else {
-      await RealTimeCollaborativeEntity.updateOne({ id }, { text: buffer }, { new: true });
+      await RealTimeCollaborativeTextEntity.updateOne({ id }, { text: buffer }, { new: true });
     }
   } catch (error) {
     console.error('Error updating document:', error);
@@ -69,7 +67,7 @@ const addWsProvider = async(roomNumber) =>{
   
   try{
     const ydoc = new Y.Doc();
-    const number = Number(roomNumber);
+    const number = roomNumber;
     const WebsocketProviderItem = await new WebsocketProvider('ws://localhost:1234', number, ydoc,{WebSocketPolyfill: WebSocket});
     wsProviderList.push({ roomNumber: number, provider: WebsocketProviderItem, ydoc });
     initWebsocket()
